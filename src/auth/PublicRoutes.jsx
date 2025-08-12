@@ -1,15 +1,10 @@
-import { useNavigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 
-export const PublicRoutes = ({ children }) => {
-  const navigate = useNavigate();
-
+export const PublicRoutes = () => {
   const { user, token } = useAuth();
 
-  if (user && token) {
-    navigate("/rooms");
-    return;
-  }
+  const isAuth = user && token;
 
-  return children;
+  return !isAuth ? <Outlet /> : <Navigate to="/users" replace />;
 };

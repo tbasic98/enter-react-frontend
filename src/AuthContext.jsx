@@ -4,10 +4,8 @@ import axios from "axios";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(localStorage.getItem("token") || null);
+  const [user, setUser] = useState(localStorage.getItem("user") || null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);
-
-  console.log(user, token);
 
   // Login with API
   const login = async ({ email, password }) => {
@@ -19,14 +17,13 @@ export function AuthProvider({ children }) {
           password,
         }
       );
+      const { token, user } = res.data;
 
-      const { access_token, user } = res.data;
-
-      setToken(access_token);
+      setToken(token);
       setUser(user);
 
       // Store in localStorage for persistence
-      localStorage.setItem("token", access_token);
+      localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
       return true;

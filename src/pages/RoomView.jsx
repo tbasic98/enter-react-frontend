@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
-import { fetchRoomEvents, fetchRooms } from '../api';
+import React, { useEffect, useState, useRef } from "react";
+import { useParams } from "react-router-dom";
+import { fetchRoomEvents, fetchRooms } from "../api";
 
 function timeToMinutes(t) {
-  const [h, m] = t.split(':').map(Number);
+  const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
 }
 
@@ -17,15 +17,15 @@ const HOURS_END = 24;
 export default function RoomView() {
   const { id } = useParams();
   const [events, setEvents] = useState([]);
-  const [roomName, setRoomName] = useState('');
+  const [roomName, setRoomName] = useState("");
   const [currentTimeTop, setCurrentTimeTop] = useState(null);
   const containerRef = useRef(null);
 
   useEffect(() => {
     async function load() {
       const roomsRes = await fetchRooms();
-      const room = roomsRes.data.find(r => r.id === Number(id));
-      setRoomName(room ? room.name : 'Room');
+      const room = roomsRes.data.find((r) => r.id === Number(id));
+      setRoomName(room ? room.name : "Room");
 
       const eventsRes = await fetchRoomEvents(id);
       setEvents(eventsRes.data);
@@ -54,7 +54,7 @@ export default function RoomView() {
         const maxScrollTop = container.scrollHeight - containerHeight;
         const finalScrollTop = Math.min(Math.max(scrollTop, 0), maxScrollTop);
 
-        container.scrollTo({ top: finalScrollTop, behavior: 'smooth' });
+        container.scrollTo({ top: finalScrollTop, behavior: "smooth" });
       }
     }
 
@@ -71,23 +71,23 @@ export default function RoomView() {
       <div
         ref={containerRef}
         style={{
-          position: 'relative',
+          position: "relative",
           height: 600,
-          overflowY: 'hidden',
-          border: '1px solid #ccc',
-          backgroundColor: 'white',
+          overflowY: "hidden",
+          border: "1px solid #ccc",
+          backgroundColor: "white",
           borderRadius: 8,
           paddingLeft: 50,
-          userSelect: 'none',
+          userSelect: "none",
           fontSize: 14,
-          color: '#555',
+          color: "#555",
         }}
       >
         <div
           style={{
-            position: 'relative',
+            position: "relative",
             height: HOURS_END * 120,
-            width: '100%',
+            width: "100%",
           }}
         >
           {[...Array(HOURS_END - HOURS_START + 1)].map((_, i) => {
@@ -97,19 +97,19 @@ export default function RoomView() {
                 key={hour}
                 style={{
                   height: 120,
-                  borderTop: '1px solid #ddd',
-                  position: 'relative',
+                  borderTop: "1px solid #ddd",
+                  position: "relative",
                 }}
               >
                 <div
                   style={{
-                    position: 'absolute',
+                    position: "absolute",
                     left: 0,
                     top: 0,
                     width: 40,
-                    textAlign: 'right',
+                    textAlign: "right",
                     paddingRight: 5,
-                    fontWeight: 'bold',
+                    fontWeight: "bold",
                   }}
                 >
                   {hour}:00
@@ -122,19 +122,19 @@ export default function RoomView() {
           {currentTimeTop !== null && (
             <div
               style={{
-                position: 'absolute',
+                position: "absolute",
                 top: currentTimeTop,
                 left: 40,
                 right: 0,
                 height: 2,
-                backgroundColor: 'red',
+                backgroundColor: "red",
                 zIndex: 10,
               }}
             />
           )}
 
           {/* Events */}
-          {events.map(event => {
+          {events.map((event) => {
             // Calculate top and height
             const startMinutes = timeToMinutes(event.start_time);
             const endMinutes = timeToMinutes(event.end_time);
@@ -145,24 +145,24 @@ export default function RoomView() {
               <div
                 key={event.id}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   top,
                   left: 50,
                   right: 10,
                   height,
-                  backgroundColor: '#4096ff',
-                  color: 'white',
+                  backgroundColor: "#4096ff",
+                  color: "white",
                   borderRadius: 4,
-                  padding: '4px 8px',
-                  boxSizing: 'border-box',
-                  fontWeight: 'bold',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
+                  padding: "4px 8px",
+                  boxSizing: "border-box",
+                  fontWeight: "bold",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
                 }}
               >
-                {event.title || 'Event'}
-                <small style={{ fontWeight: 'normal', fontSize: 12 }}>
+                {event.title || "Event"}
+                <small style={{ fontWeight: "normal", fontSize: 12 }}>
                   {event.start_time} - {event.end_time}
                 </small>
               </div>

@@ -4,50 +4,46 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import LoginPage from "./components/LoginPage";
-import RegisterPage from "./components/RegisterPage";
-import UsersPage from "./components/UsersPage";
-import RoomsPage from "./components/RoomsPage";
-import RoomView from "./components/RoomView";
-import EventsPage from "./components/EventsPage";
-import { ProtectedRoutes } from "./auth/ProtectedRoutes";
+import { CssBaseline } from "@mui/material";
+
+// Pages
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import UsersPage from "./pages/UsersPage";
+import RoomsPage from "./pages/RoomsPage";
+import RoomView from "./pages/RoomView";
+import EventsPage from "./pages/EventsPage";
 import { PublicRoutes } from "./auth/PublicRoutes";
-import { NavbarLayout } from "./components/NavbarLayout";
+import { ProtectedRoutes } from "./auth/ProtectedRoutes";
+import { DashboardLayoutWrapper } from "./components/DashboardLayoutWrapper";
+import { AppProvider } from "@toolpad/core";
 
 function App() {
   return (
     <Router>
-      <div style={{ fontFamily: "Arial, sans-serif" }}>
-        <Routes>
+      <CssBaseline />
+      <Routes>
+        <Route element={<PublicRoutes />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Route>
+        <Route element={<ProtectedRoutes />}>
           <Route
-            path="/login"
             element={
-              <PublicRoutes>
-                <LoginPage />
-              </PublicRoutes>
+              <AppProvider>
+                <DashboardLayoutWrapper />
+              </AppProvider>
             }
-          />
-          <Route
-            path="/register"
-            element={
-              <PublicRoutes>
-                <RegisterPage />
-              </PublicRoutes>
-            }
-          />
-          <Route element={<ProtectedRoutes />}>
-            <Route element={<NavbarLayout />}>
-              <Route path="/users" element={<UsersPage />} />
-              <Route path="/rooms" element={<RoomsPage />} />
-              <Route path="/rooms/:id" element={<RoomView />} />
-              <Route path="/events" element={<EventsPage />} />
-            </Route>
+          >
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/rooms" element={<RoomsPage />} />
+            <Route path="/rooms/:id" element={<RoomView />} />
+            <Route path="/events" element={<EventsPage />} />
+            <Route index element={<Navigate to="/users" replace />} />
           </Route>
-
-          {/* Redirect any unknown route to /login */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </div>
+        </Route>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
     </Router>
   );
 }
