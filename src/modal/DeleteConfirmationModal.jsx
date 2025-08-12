@@ -6,13 +6,11 @@ import {
   DialogTitle,
   Typography,
 } from "@mui/material";
-import { deleteUser } from "../api";
 
 export const DeleteConfirmationModal = ({
   deleteOpen,
   setDeleteOpen,
   selectedData,
-  setSelectedData,
   handleConfirm,
 }) => {
   // Funkcija za potvrdu brisanja korisnika
