@@ -12,6 +12,7 @@ export const DeleteConfirmationModal = ({
   setDeleteOpen,
   selectedData,
   handleConfirm,
+  type = "korisnika",
 }) => {
   // Funkcija za potvrdu brisanja korisnika
 
@@ -20,7 +21,7 @@ export const DeleteConfirmationModal = ({
       <DialogTitle>Potvrda brisanja</DialogTitle>
       <DialogContent>
         <Typography>
-          Jeste li sigurni da želite obrisati korisnika{" "}
+          Jeste li sigurni da želite obrisati {type}{" "}
           <strong>
             {selectedData?.name} {selectedData?.firstName}{" "}
             {selectedData?.lastName}

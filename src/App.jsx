@@ -12,11 +12,13 @@ import RegisterPage from "./pages/RegisterPage";
 import UsersPage from "./pages/UsersPage";
 import RoomsPage from "./pages/RoomsPage";
 import RoomView from "./pages/RoomView";
-import EventsPage from "./pages/EventsPage";
 import { PublicRoutes } from "./auth/PublicRoutes";
 import { ProtectedRoutes } from "./auth/ProtectedRoutes";
 import { DashboardLayoutWrapper } from "./components/DashboardLayoutWrapper";
 import { AppProvider } from "@toolpad/core";
+import { DashboardPage } from "./pages/DashboardPage";
+import AdminRoute from "./auth/AdmingRoutes";
+import UnauthorizedPage from "./pages/UnauthorizedPage";
 
 function App() {
   return (
@@ -29,17 +31,46 @@ function App() {
         </Route>
         <Route element={<ProtectedRoutes />}>
           <Route
+            path="/rooms/:id"
+            element={
+              <AdminRoute>
+                <RoomView />
+              </AdminRoute>
+            }
+          />
+
+          <Route
             element={
               <AppProvider>
                 <DashboardLayoutWrapper />
               </AppProvider>
             }
           >
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/rooms" element={<RoomsPage />} />
-            <Route path="/rooms/:id" element={<RoomView />} />
-            <Route path="/events" element={<EventsPage />} />
-            <Route index element={<Navigate to="/users" replace />} />
+            {/* Admin-only rute */}
+            <Route
+              path="/users"
+              element={
+                <AdminRoute>
+                  <UsersPage />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/rooms"
+              element={
+                <AdminRoute>
+                  <RoomsPage />
+                </AdminRoute>
+              }
+            />
+
+            {/* Dostupno svim autentificiranim korisnicima */}
+            <Route path="/dashboard" element={<DashboardPage />} />
+
+            {/* Unauthorized page - sada unutar layout-a */}
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+            <Route index element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />

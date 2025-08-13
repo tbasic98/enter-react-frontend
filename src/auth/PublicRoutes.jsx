@@ -6,5 +6,5 @@ export const PublicRoutes = () => {
 
   const isAuth = user && token;
 
-  return !isAuth ? <Outlet /> : <Navigate to="/users" replace />;
+  return !isAuth ? <Outlet /> : <Navigate to="/dashboard" replace />;
 };

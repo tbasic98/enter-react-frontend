@@ -121,27 +121,52 @@ export function deleteRoom(id) {
   return api.delete(`/rooms/${id}`);
 }
 
-// EVENTS
+// MEETINGS
 export function fetchEvents() {
-  return api.get("/events");
+  return api.get("/meetings");
 }
 
 export function fetchEvent(id) {
-  return api.get(`/events/${id}`);
-}
-
-export function fetchRoomEvents(roomId) {
-  return api.get(`/rooms/${roomId}/events`);
+  return api.get(`/meetings/${id}`);
 }
 
 export function createEvent(data) {
-  return api.post("/events", data);
+  return api.post("/meetings/create", data);
 }
 
 export function updateEvent(id, data) {
-  return api.put(`/events/${id}`, data);
+  return api.put(`/meetings/${id}`, data);
 }
 
 export function deleteEvent(id) {
-  return api.delete(`/events/${id}`);
+  return api.delete(`/meetings/${id}`);
+}
+
+// Dodatne funkcije prema vašoj API dokumentaciji
+export function getAvailableRooms(startTime = null, endTime = null) {
+  if (!startTime || !endTime) {
+    const now = new Date();
+
+    // Default: sljedeći puni sat
+    const defaultStart = new Date(now);
+    defaultStart.setHours(defaultStart.getHours() + 1, 0, 0, 0);
+
+    // Do 2 sata kasnije
+    const defaultEnd = new Date(defaultStart);
+    defaultEnd.setHours(defaultEnd.getHours() + 1);
+
+    startTime = defaultStart.toISOString(); // Već je u ISO formatu
+    endTime = defaultEnd.toISOString(); // Već je u ISO formatu
+  }
+
+  return api.get("/meetings/available", {
+    params: {
+      startTime,
+      endTime,
+    },
+  });
+}
+
+export function getUserMeetings(userId) {
+  return api.get(`/meetings/users/${userId}`);
 }
