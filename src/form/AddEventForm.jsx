@@ -12,7 +12,7 @@ import { createEvent, fetchRooms } from "../api";
 import FormModal from "../components/FormModal";
 import { useAuth } from "../AuthContext";
 
-export function AddEventForm({ open, onClose, onEventAdded }) {
+export function AddEventForm({ open, setOpen, onClose, setUserMeetings }) {
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -110,6 +110,12 @@ export function AddEventForm({ open, onClose, onEventAdded }) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const onEventAdded = async (newEvent) => {
+    // Optimistički update
+    setUserMeetings((prevMeetings) => [...prevMeetings, newEvent]);
+    setOpen(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -134,7 +140,7 @@ export function AddEventForm({ open, onClose, onEventAdded }) {
       };
 
       const response = await createEvent(eventData);
-      onEventAdded(response.data);
+      onEventAdded(response.data?.meeting);
       setForm({
         title: "",
         description: "",

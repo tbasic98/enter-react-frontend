@@ -147,16 +147,31 @@ export function getAvailableRooms(startTime = null, endTime = null) {
   if (!startTime || !endTime) {
     const now = new Date();
 
-    // Default: sljedeći puni sat
+    // Koristite trenutno vrijeme kao početak (umjesto sljedećeg sata)
     const defaultStart = new Date(now);
-    defaultStart.setHours(defaultStart.getHours() + 1, 0, 0, 0);
 
-    // Do 2 sata kasnije
-    const defaultEnd = new Date(defaultStart);
+    // Dodajte 1 sat od sada
+    const defaultEnd = new Date(now);
     defaultEnd.setHours(defaultEnd.getHours() + 1);
 
-    startTime = defaultStart.toISOString(); // Već je u ISO formatu
-    endTime = defaultEnd.toISOString(); // Već je u ISO formatu
+    console.log("Local times:", defaultStart, defaultEnd);
+
+    // Koristite lokalno formatiranje umjesto toISOString()
+    const formatLocalToISO = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      const seconds = String(date.getSeconds()).padStart(2, "0");
+
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.000Z`;
+    };
+
+    startTime = formatLocalToISO(defaultStart);
+    endTime = formatLocalToISO(defaultEnd);
+
+    console.log("ISO strings:", startTime, endTime);
   }
 
   return api.get("/meetings/available", {
