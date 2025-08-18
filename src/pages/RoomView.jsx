@@ -281,12 +281,13 @@ export default function RoomView() {
           overlayWidth: `${(1 - animationData.progress) * 100}%`, // ✅ 100% na početku, 0% na kraju
           animationData,
         };
+
       default:
         return {
           primary: "#4caf50",
           bg: "linear-gradient(135deg, #4caf50 0%, #388e3c 100%)",
           ledColor: "#4caf50",
-          overlayWidth: "0%",
+          overlayWidth: "100%",
           animationData,
         };
     }
@@ -414,9 +415,8 @@ export default function RoomView() {
             bottom: 0,
             width: statusTheme.overlayWidth, // 100% → 0% kako vreme prolazi
             background: statusTheme.bg,
-            opacity: 0.85, // Transparentni overlay
+            opacity: 0.7, // Transparentni overlay
             zIndex: 2,
-            transition: "width 10s ease-out", // Smooth animacija
             borderLeft: `4px solid ${statusTheme.primary}`, // ✅ Levi border
             boxShadow: `inset 10px 0 20px -10px ${statusTheme.primary}40`, // ✅ Shadow sa leve strane
           }}
