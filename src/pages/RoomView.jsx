@@ -32,10 +32,8 @@ import {
 } from "@mui/icons-material";
 
 // Calendar constants
-const SLOT_HEIGHT = 60; // px per hour
-const VISIBLE_SLOTS = 8;
-const SLOTS_BEFORE = 3;
-const SLOTS_AFTER = VISIBLE_SLOTS - SLOTS_BEFORE - 1;
+const VISIBLE_SLOTS = 6;
+const SLOTS_BEFORE = 2;
 
 export default function RoomView() {
   const { id } = useParams();
@@ -172,6 +170,48 @@ export default function RoomView() {
     return { status: "available" };
   };
 
+  // Kalkulacija progresa animacije
+  const getAnimationProgress = () => {
+    const roomStatus = getRoomStatus();
+
+    if (roomStatus.status === "occupied" && roomStatus.meeting) {
+      const meeting = roomStatus.meeting;
+      const startTime = new Date(meeting.startTime);
+      const endTime = new Date(meeting.endTime);
+      const now = currentTime;
+
+      // Kalkuliraj progress (0-1, gdje je 1 = meeting završen)
+      const totalDuration = endTime - startTime;
+      const elapsed = now - startTime;
+      const progress = Math.min(Math.max(elapsed / totalDuration, 0), 1);
+
+      return {
+        progress,
+        timeRemaining: Math.max(0, Math.floor((endTime - now) / (1000 * 60))),
+        totalMinutes: Math.floor(totalDuration / (1000 * 60)),
+      };
+    }
+
+    if (roomStatus.status === "soon" && roomStatus.meeting) {
+      const meeting = roomStatus.meeting;
+      const startTime = new Date(meeting.startTime);
+      const now = currentTime;
+
+      // Kalkuliraj koliko je blizu početak (15 min = 0, 0 min = 1)
+      const timeUntil = Math.max(0, startTime - now);
+      const minutesUntil = Math.floor(timeUntil / (1000 * 60));
+      const progress = Math.min(Math.max(1 - minutesUntil / 15, 0), 1);
+
+      return {
+        progress,
+        minutesUntil,
+        isStartingSoon: true,
+      };
+    }
+
+    return { progress: 0 };
+  };
+
   const canQuickBook = () => {
     const roomStatus = getRoomStatus();
     if (roomStatus.status === "occupied") return false;
@@ -189,7 +229,6 @@ export default function RoomView() {
       const startTime = new Date(now);
       const endTime = new Date(now.getTime() + selectedDuration * 60 * 1000);
 
-      // Random nazivi
       const randomTitles = [
         "Improvizovani Meeting",
         "Kratka Diskusija",
@@ -204,8 +243,8 @@ export default function RoomView() {
       const eventData = {
         userId: user.id,
         roomId: parseInt(id),
-        startTime: startTime.toISOString(), // UTC format
-        endTime: endTime.toISOString(), // UTC format
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
         title: randomTitle,
         description: `Brzo kreiran event (${selectedDuration} min)`,
       };
@@ -220,27 +259,35 @@ export default function RoomView() {
     }
   };
 
-  // Boje ovisno o statusu
+  // ✅ ISPRAVLJENA funkcija za dobijanje tema s animacijom (desna na levu)
   const getStatusTheme = () => {
     const roomStatus = getRoomStatus();
+    const animationData = getAnimationProgress();
+
     switch (roomStatus.status) {
       case "occupied":
         return {
           primary: "#f44336",
           bg: "linear-gradient(135deg, #f44336 0%, #d32f2f 100%)",
           ledColor: "#f44336",
+          overlayWidth: `${(1 - animationData.progress) * 100}%`, // ✅ 100% na početku, 0% na kraju
+          animationData,
         };
       case "soon":
         return {
           primary: "#ff9800",
           bg: "linear-gradient(135deg, #ff9800 0%, #f57c00 100%)",
           ledColor: "#ff9800",
+          overlayWidth: `${(1 - animationData.progress) * 100}%`, // ✅ 100% na početku, 0% na kraju
+          animationData,
         };
       default:
         return {
           primary: "#4caf50",
           bg: "linear-gradient(135deg, #4caf50 0%, #388e3c 100%)",
           ledColor: "#4caf50",
+          overlayWidth: "0%",
+          animationData,
         };
     }
   };
@@ -301,11 +348,22 @@ export default function RoomView() {
   const nextMeeting = getNextMeeting();
   const statusTheme = getStatusTheme();
 
-  // Calendar logic
-  const centerHour = currentTime.getHours();
+  // Timeline kalkulacija
+  const currentHour = currentTime.getHours();
+  const currentMinute = currentTime.getMinutes();
+
   const slotHours = Array.from({ length: VISIBLE_SLOTS }, (_, i) =>
-    Math.max(0, Math.min(23, centerHour - SLOTS_BEFORE + i))
+    Math.max(0, Math.min(23, currentHour - SLOTS_BEFORE + i))
   );
+
+  const rangeStart = new Date(currentTime);
+  rangeStart.setHours(slotHours[0], 0, 0, 0);
+
+  const rangeEnd = new Date(currentTime);
+  rangeEnd.setHours(slotHours + VISIBLE_SLOTS, 0, 0, 0);
+
+  const rangeTotalMinutes = (rangeEnd - rangeStart) / (1000 * 60);
+  const rangeHours = VISIBLE_SLOTS;
 
   return (
     <Box
@@ -317,24 +375,55 @@ export default function RoomView() {
         position: "relative",
         overflow: "hidden",
         // LED frame effect
-        border: `6px solid ${statusTheme.ledColor}`,
         boxShadow: `0 0 20px ${statusTheme.ledColor}60`,
       }}
     >
-      {/* Left Side - Main Room Info */}
+      {/* ✅ Left Side - Main Room Info with Background Image + Animated Overlay */}
       <Box
         sx={{
           flex: 1,
-          background: statusTheme.bg,
+          position: "relative",
           color: "white",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
           p: { xs: 4, md: 6 },
+          // Background image
+          backgroundImage: `url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.3)", // Tamni overlay za bolju čitljivost teksta
+            zIndex: 1,
+          },
         }}
       >
-        {/* Header */}
-        <Box>
+        {/* ✅ Animated Color Overlay - pomera se sa DESNA NA LEVO kako vreme ističe */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0, // ✅ Desna strana
+            bottom: 0,
+            width: statusTheme.overlayWidth, // 100% → 0% kako vreme prolazi
+            background: statusTheme.bg,
+            opacity: 0.85, // Transparentni overlay
+            zIndex: 2,
+            transition: "width 10s ease-out", // Smooth animacija
+            borderLeft: `4px solid ${statusTheme.primary}`, // ✅ Levi border
+            boxShadow: `inset 10px 0 20px -10px ${statusTheme.primary}40`, // ✅ Shadow sa leve strane
+          }}
+        />
+
+        {/* Content - above overlay */}
+        <Box sx={{ position: "relative", zIndex: 3 }}>
           <Typography
             variant="h4"
             sx={{
@@ -354,6 +443,7 @@ export default function RoomView() {
               mb: 2,
               fontSize: { xs: "2.5rem", md: "4rem" },
               lineHeight: 1.2,
+              textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
             }}
           >
             {room.name}
@@ -367,11 +457,14 @@ export default function RoomView() {
                   fontWeight: 500,
                   mb: 2,
                   opacity: 0.95,
+                  textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
                 }}
               >
                 {currentMeeting.title}
               </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 3, mb: 2 }}
+              >
                 <Typography variant="h4" sx={{ fontWeight: 400 }}>
                   {formatTime(currentMeeting.startTime)} -{" "}
                   {formatTime(currentMeeting.endTime)}
@@ -383,6 +476,10 @@ export default function RoomView() {
                   </Typography>
                 </Box>
               </Box>
+              {/* Progress indicator */}
+              <Typography variant="h5" sx={{ fontWeight: 300, opacity: 0.9 }}>
+                Preostalo: {statusTheme.animationData?.timeRemaining || 0} min
+              </Typography>
             </Box>
           )}
 
@@ -393,6 +490,7 @@ export default function RoomView() {
                 fontWeight: 400,
                 mb: 4,
                 opacity: 0.95,
+                textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
               }}
             >
               {nextMeeting
@@ -409,6 +507,7 @@ export default function RoomView() {
                   fontWeight: 500,
                   mb: 2,
                   opacity: 0.95,
+                  textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
                 }}
               >
                 {nextMeeting.title}
@@ -420,14 +519,14 @@ export default function RoomView() {
                   opacity: 0.9,
                 }}
               >
-                Počinje za {roomStatus.minutesUntil} minuta
+                Počinje za {statusTheme.animationData?.minutesUntil || 0} minuta
               </Typography>
             </Box>
           )}
         </Box>
 
-        {/* Clock */}
-        <Box>
+        {/* Clock - above overlay */}
+        <Box sx={{ position: "relative", zIndex: 3 }}>
           <Typography
             variant="h1"
             sx={{
@@ -435,6 +534,7 @@ export default function RoomView() {
               fontSize: { xs: "4rem", md: "7rem" },
               letterSpacing: "4px",
               mb: 2,
+              textShadow: "3px 3px 6px rgba(0,0,0,0.5)",
             }}
           >
             {currentTime.toLocaleTimeString("hr-HR", {
@@ -448,6 +548,7 @@ export default function RoomView() {
               fontWeight: 400,
               opacity: 0.8,
               letterSpacing: "1px",
+              textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
             }}
           >
             {currentTime.toLocaleDateString("hr-HR", {
@@ -459,10 +560,10 @@ export default function RoomView() {
         </Box>
       </Box>
 
-      {/* Right Side - Fixed Height Calendar Timeline */}
+      {/* Right Side - Timeline Calendar */}
       <Box
         sx={{
-          width: { xs: "350px", md: "400px" },
+          width: { xs: "420px", md: "480px" },
           background: "white",
           borderLeft: "1px solid #e0e0e0",
           display: "flex",
@@ -473,13 +574,13 @@ export default function RoomView() {
         {/* Calendar Header */}
         <Box
           sx={{
-            p: 3,
+            p: { xs: 3, md: 4 },
             borderBottom: "1px solid #e0e0e0",
             background: "linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)",
-            flexShrink: 0, // Ne smanjuj header
+            flexShrink: 0,
           }}
         >
-          <Typography variant="h5" fontWeight="bold" color="text.primary">
+          <Typography variant="h4" fontWeight="bold" color="text.primary">
             Danas •{" "}
             {currentTime.toLocaleDateString("hr-HR", {
               day: "numeric",
@@ -488,204 +589,209 @@ export default function RoomView() {
           </Typography>
         </Box>
 
-        {/* Timeline - Flexible Height */}
+        {/* Timeline Container */}
         <Box
           sx={{
-            flex: 1, // Zauzmi svu preostalu visinu
+            flex: 1,
             position: "relative",
             overflow: "hidden",
             background: "white",
-            display: "flex",
-            flexDirection: "column",
           }}
         >
-          {/* Time slots */}
+          {/* Hour Grid Lines and Labels */}
           {slotHours.map((hour, i) => {
-            const slotStart = new Date(currentTime);
-            slotStart.setHours(hour, 0, 0, 0);
-            const slotEnd = new Date(slotStart);
-            slotEnd.setHours(hour + 1, 0, 0, 0);
-
-            // Eventi koji se preklapaju s ovim slotom
-            const eventsInSlot = todayEvents.filter((event) => {
-              const eventStart = new Date(event.startTime);
-              const eventEnd = new Date(event.endTime);
-              return eventEnd > slotStart && eventStart < slotEnd;
-            });
-
             const isCurrentHour = hour === currentTime.getHours();
 
             return (
               <Box
                 key={hour}
                 sx={{
-                  flex: 1, // Svaki slot dobiva jednaku visinu (100% / broj slotova)
-                  minHeight: "40px", // Minimalna visina za čitljivost
+                  position: "absolute",
+                  top: `${(i / slotHours.length) * 100}%`,
+                  left: 0,
+                  right: 0,
+                  height: `${100 / slotHours.length}%`,
                   borderBottom: "1px solid #f0f0f0",
                   background: isCurrentHour ? "#e3f2fd" : "transparent",
                   display: "flex",
-                  position: "relative",
+                  alignItems: "flex-start",
+                  zIndex: 1,
                 }}
               >
                 {/* Time label */}
                 <Box
                   sx={{
-                    width: "80px",
+                    width: "100px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     borderRight: "1px solid #f0f0f0",
                     background: "#fafafa",
-                    flexShrink: 0,
+                    height: "100%",
+                    minHeight: "60px",
                   }}
                 >
                   <Typography
-                    variant="body1"
+                    variant="h6"
                     sx={{
                       fontWeight: isCurrentHour ? "bold" : 500,
                       color: isCurrentHour ? "primary.main" : "text.secondary",
+                      fontSize: { xs: "1.1rem", md: "1.3rem" },
                     }}
                   >
                     {hour.toString().padStart(2, "0")}:00
                   </Typography>
                 </Box>
-
-                {/* Events render area */}
-                <Box sx={{ flex: 1, position: "relative" }}>
-                  {eventsInSlot.map((event, eventIdx) => {
-                    const eventStart = new Date(event.startTime);
-                    const eventEnd = new Date(event.endTime);
-
-                    // Kalkulacija pozicije i visine unutar slota (u postocima)
-                    const blockStartMinutes = Math.max(
-                      0,
-                      (eventStart - slotStart) / 60000
-                    );
-                    const blockEndMinutes = Math.min(
-                      60,
-                      (eventEnd - slotStart) / 60000
-                    );
-                    const blockDurationMinutes = Math.max(
-                      0,
-                      blockEndMinutes - blockStartMinutes
-                    );
-
-                    if (blockDurationMinutes <= 0) return null;
-
-                    const topPercent = (blockStartMinutes / 60) * 100;
-                    const heightPercent = (blockDurationMinutes / 60) * 100;
-
-                    const isCurrentEvent = getCurrentMeeting()?.id === event.id;
-
-                    return (
-                      <Card
-                        key={`${event.id}-${eventIdx}`}
-                        sx={{
-                          position: "absolute",
-                          top: `${topPercent}%`,
-                          left: "8px",
-                          right: "8px",
-                          height: `${heightPercent}%`,
-                          minHeight: "20px", // Minimalna visina za kratke eventi
-                          background: isCurrentEvent
-                            ? "linear-gradient(135deg, #f44336 0%, #d32f2f 100%)"
-                            : "linear-gradient(135deg, #2196f3 0%, #1976d2 100%)",
-                          color: "white",
-                          borderRadius: 2,
-                          boxShadow: 3,
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "center",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <CardContent
-                          sx={{
-                            p: 1,
-                            "&:last-child": { pb: 1 },
-                            height: "100%",
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontWeight: "bold",
-                              mb: 0.5,
-                              fontSize: { xs: "0.75rem", md: "0.875rem" },
-                              lineHeight: 1.2,
-                            }}
-                          >
-                            {event.title}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              opacity: 0.9,
-                              display: "block",
-                              fontSize: { xs: "0.65rem", md: "0.75rem" },
-                            }}
-                          >
-                            {formatTime(event.startTime)} -{" "}
-                            {formatTime(event.endTime)}
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </Box>
               </Box>
             );
           })}
 
-          {/* Now Line - Responsive positioning */}
-          {(() => {
-            const currentHourInView = slotHours.findIndex(
-              (h) => h === currentTime.getHours()
-            );
-            if (currentHourInView === -1) return null;
+          {/* Events Overlay */}
+          <Box
+            sx={{
+              position: "absolute",
+              left: 100,
+              top: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 2,
+            }}
+          >
+            {todayEvents.map((event) => {
+              const eventStart = new Date(event.startTime);
+              const eventEnd = new Date(event.endTime);
 
-            const currentMinute = currentTime.getMinutes();
-            // Kalkulacija pozicije u postocima
-            const slotPercentage = 100 / slotHours.length; // Koliko % zauzima jedan slot
-            const nowLineTopPercent =
-              currentHourInView * slotPercentage +
-              (currentMinute / 60) * slotPercentage;
+              if (eventEnd <= rangeStart || eventStart >= rangeEnd) {
+                return null;
+              }
+
+              const eventStartHour =
+                eventStart.getHours() + eventStart.getMinutes() / 60;
+              const eventEndHour =
+                eventEnd.getHours() + eventEnd.getMinutes() / 60;
+
+              const firstSlotHour = slotHours[0];
+              const totalRangeHours = rangeHours;
+
+              const topPercent =
+                ((eventStartHour - firstSlotHour) / totalRangeHours) * 100;
+              const heightPercent =
+                ((eventEndHour - eventStartHour) / totalRangeHours) * 100;
+
+              if (topPercent < 0 || topPercent > 100 || heightPercent <= 0) {
+                return null;
+              }
+
+              const isCurrentEvent = getCurrentMeeting()?.id === event.id;
+
+              return (
+                <Card
+                  key={event.id}
+                  sx={{
+                    position: "absolute",
+                    left: "12px",
+                    right: "12px",
+                    top: `${Math.max(0, topPercent)}%`,
+                    height: `${Math.min(100 - Math.max(0, topPercent), heightPercent)}%`,
+                    minHeight: "30px",
+                    background: isCurrentEvent
+                      ? "linear-gradient(135deg, #f44336 0%, #d32f2f 100%)"
+                      : "linear-gradient(135deg, #2196f3 0%, #1976d2 100%)",
+                    color: "white",
+                    borderRadius: 3,
+                    boxShadow: 4,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    overflow: "hidden",
+                  }}
+                >
+                  <CardContent
+                    sx={{
+                      p: { xs: 1.5, md: 2 },
+                      "&:last-child": { pb: { xs: 1.5, md: 2 } },
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontWeight: "bold",
+                        mb: 0.5,
+                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {event.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        opacity: 0.9,
+                        fontSize: { xs: "0.8rem", md: "0.9rem" },
+                      }}
+                    >
+                      {formatTime(event.startTime)} -{" "}
+                      {formatTime(event.endTime)}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </Box>
+
+          {/* Now Line */}
+          {(() => {
+            const nowHour =
+              currentTime.getHours() + currentTime.getMinutes() / 60;
+            const firstSlotHour = slotHours[0];
+            const totalRangeHours = rangeHours;
+
+            const nowTopPercent =
+              ((nowHour - firstSlotHour) / totalRangeHours) * 100;
+
+            if (nowTopPercent < 0 || nowTopPercent > 100) {
+              return null;
+            }
 
             return (
               <Box
                 sx={{
                   position: "absolute",
-                  left: "80px",
+                  left: "100px",
                   right: 0,
-                  top: `${nowLineTopPercent}%`,
-                  height: "3px",
+                  top: `${nowTopPercent}%`,
+                  height: "4px",
                   background: "#f44336",
-                  boxShadow: "0 0 10px #f44336",
+                  boxShadow: "0 0 15px #f44336",
                   zIndex: 10,
                   "&::before": {
                     content: '""',
                     position: "absolute",
-                    left: "-8px",
-                    top: "-5px",
-                    width: "14px",
-                    height: "14px",
+                    left: "-10px",
+                    top: "-7px",
+                    width: "18px",
+                    height: "18px",
                     background: "#f44336",
                     borderRadius: "50%",
-                    border: "2px solid white",
+                    border: "3px solid white",
                   },
                   "&::after": {
-                    content: `"${currentTime.toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" })}"`,
+                    content: `"${currentTime.toLocaleTimeString("hr-HR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}"`,
                     position: "absolute",
-                    right: "10px",
-                    top: "-14px",
+                    right: "15px",
+                    top: "-16px",
                     background: "#f44336",
                     color: "white",
-                    padding: "2px 8px",
-                    borderRadius: "4px",
-                    fontSize: "12px",
+                    padding: "4px 12px",
+                    borderRadius: "6px",
+                    fontSize: "14px",
                     fontWeight: "bold",
                   },
                 }}
@@ -712,6 +818,7 @@ export default function RoomView() {
             "&:hover": {
               background: "linear-gradient(135deg, #45a049 0%, #2e7d32 100%)",
             },
+            zIndex: 10,
           }}
         >
           <Add sx={{ fontSize: 40 }} />
