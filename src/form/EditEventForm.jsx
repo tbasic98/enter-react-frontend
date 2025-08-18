@@ -135,8 +135,6 @@ export function EditEventForm({ open, onClose, event, onEventUpdated }) {
         roomId: parseInt(form.roomId, 10),
       };
 
-      console.log("Updating event data:", eventData);
-
       const response = await updateEvent(event.id, eventData);
       onEventUpdated(response.data);
     } catch (error) {

@@ -39,7 +39,6 @@ export default function UsersPage() {
     setLoading(true);
     try {
       const response = await fetchUsers();
-      console.log("Users data:", response.data);
       setUsers(response.data?.users || response.data || []);
     } catch (err) {
       setError("Greška pri dohvaćanju korisnika");

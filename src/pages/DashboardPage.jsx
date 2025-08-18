@@ -44,7 +44,6 @@ export const DashboardPage = () => {
   // Computed values
   const { todayMeetings } = useTodayMeetings(userMeetings);
   const { upcomingMeetings } = useUpcomingMeetings(userMeetings);
-  console.log(upcomingMeetings);
   const { currentMeeting } = useCurrentMeetings(userMeetings);
   // Loading state
   if (loading) {

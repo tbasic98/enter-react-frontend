@@ -156,8 +156,6 @@ export function getAvailableRooms(startTime = null, endTime = null) {
     const defaultEnd = new Date(now);
     defaultEnd.setHours(defaultEnd.getHours() + 1);
 
-    console.log("Local times:", defaultStart, defaultEnd);
-
     // Koristite lokalno formatiranje umjesto toISOString()
     const formatLocalToISO = (date) => {
       const year = date.getFullYear();
@@ -172,8 +170,6 @@ export function getAvailableRooms(startTime = null, endTime = null) {
 
     startTime = formatLocalToISO(defaultStart);
     endTime = formatLocalToISO(defaultEnd);
-
-    console.log("ISO strings:", startTime, endTime);
   }
 
   return api.get("/meetings/available", {

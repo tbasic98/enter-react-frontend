@@ -40,7 +40,6 @@ export default function RoomsPage() {
     setLoading(true);
     try {
       const response = await fetchRooms();
-      console.log("Rooms data:", response.data);
       setRooms(response.data?.rooms || response.data || []);
     } catch (err) {
       setError("Greška pri dohvaćanju soba");

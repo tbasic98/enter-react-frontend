@@ -11,8 +11,6 @@ export const useUpcomingMeetings = (userMeetings) => {
         const meetingStart = new Date(meeting.startTime);
         const minutesFromNow = (meetingStart - now) / (1000 * 60);
 
-        console.log(minutesFromNow);
-
         // Meetingi koji počinju za više od 30 minuta
         return minutesFromNow < 30 && minutesFromNow > 0;
       })

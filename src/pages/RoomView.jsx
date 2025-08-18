@@ -73,15 +73,13 @@ export default function RoomView() {
   // Dohvati podatke o sobi i eventovima
   useEffect(() => {
     loadRoomData();
-    const refreshTimer = setInterval(loadRoomData, 60000);
+    const refreshTimer = setInterval(loadRoomData, 5000);
 
     return () => clearInterval(refreshTimer);
   }, [id]);
 
   const loadRoomData = async () => {
     if (!id) return;
-
-    setLoading(true);
     try {
       const [roomsResponse, eventsResponse] = await Promise.all([
         fetchRooms(),
@@ -248,8 +246,6 @@ export default function RoomView() {
         title: randomTitle,
         description: `Brzo kreiran event (${selectedDuration} min)`,
       };
-
-      console.log("🎯 Creating quick event:", eventData);
 
       await createEvent(eventData);
       setQuickBookOpen(false);

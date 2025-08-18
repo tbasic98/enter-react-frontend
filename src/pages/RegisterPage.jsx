@@ -14,7 +14,6 @@ export default function RegisterPage() {
     const email = formData.get("email");
     const password = formData.get("password");
     const confirm = formData.get("confirm");
-    console.log("??");
     if (password !== confirm) {
       setError("Passwords do not match");
       throw new Error("Passwords do not match");
@@ -28,7 +27,6 @@ export default function RegisterPage() {
         password_confirmation: confirm,
       });
 
-      console.log(response);
       navigate("/login");
     } catch (err) {
       setError("Failed to register");

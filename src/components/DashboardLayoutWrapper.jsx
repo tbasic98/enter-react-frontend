@@ -56,7 +56,6 @@ export function DashboardLayoutWrapper() {
       logout();
     },
   };
-  console.log(user);
   const navigation = getNavigation(user?.role);
 
   return (
