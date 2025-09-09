@@ -25,16 +25,17 @@ function App() {
     <Router>
       <CssBaseline />
       <Routes>
-        <Route element={<PublicRoutes />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-        </Route>
         <Route
-          path="/rooms/:id"
+          path="/conf-room/:id"
           element={
               <RoomView />
           }
         />
+        <Route element={<PublicRoutes />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+
+        </Route>
         <Route element={<ProtectedRoutes />}>
           <Route
             element={

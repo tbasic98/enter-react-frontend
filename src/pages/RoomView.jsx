@@ -57,9 +57,6 @@ export default function RoomView() {
 
   const user = getUserFromStorage();
 
-  if (!user || user.role !== "admin") {
-    return <Navigate to="/unauthorized" replace />;
-  }
 
   // Update trenutnog vremena svakih 10 sekundi
   useEffect(() => {
