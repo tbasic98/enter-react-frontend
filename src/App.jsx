@@ -33,9 +33,7 @@ function App() {
           <Route
             path="/rooms/:id"
             element={
-              <AdminRoute>
                 <RoomView />
-              </AdminRoute>
             }
           />
 
