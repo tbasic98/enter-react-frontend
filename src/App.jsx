@@ -29,14 +29,13 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Route>
+        <Route
+          path="/rooms/:id"
+          element={
+              <RoomView />
+          }
+        />
         <Route element={<ProtectedRoutes />}>
-          <Route
-            path="/rooms/:id"
-            element={
-                <RoomView />
-            }
-          />
-
           <Route
             element={
               <AppProvider>
