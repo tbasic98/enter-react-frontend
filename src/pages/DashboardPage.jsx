@@ -9,11 +9,11 @@ import {
   CircularProgress,
   Typography,
 } from "@mui/material";
-import DashboardStats from "../components/Dashboard/DashboardStats";
-import DashboardHeader from "../components/Dashboard/DashboardHeader";
+import DashboardStats from "../components/dashboard/DashboardStats";
+import DashboardHeader from "../components/dashboard/DashboardHeader";
 import TodaysMeetingsList from "../components/dashboard/TodaysMeetingsList";
-import UpcomingMeetingsList from "../components/Dashboard/UpcomingMeetingsList";
-import AvailableRoomsList from "../components/Dashboard/AvailableRoomsList";
+import UpcomingMeetingsList from "../components/dashboard/UpcomingMeetingsList";
+import AvailableRoomsList from "../components/dashboard/AvailableRoomsList";
 
 import { DashboardError } from "../components/dashboard/DashboardError";
 import { useData } from "../components/dashboard/useData";
